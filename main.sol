@@ -125,14 +125,13 @@ contract BlockchainInsper {
         Members section
     =======================*/
     struct Member {
-        uint256 memberType;
+        uint8 memberType;
         address memberAddress;
         bool active;
-        uint256 xp;
-        uint256[] projects;
+        uint8 xp;
         bool changed;
         string PGP;
-        uint256 staffPoints;
+        uint8 staffPoints;
     }
     mapping(uint256 => Member) members;
     uint256[] public memberIds;
@@ -141,22 +140,22 @@ contract BlockchainInsper {
         return memberIds.length;
     }
 
-    function addMembers(uint256 _memberType, address _memberAddress) public {
+    function addMembers(uint8 _memberType, address _memberAddress) public {
         if (msg.sender == president || msg.sender == techDirector) {
-            BlockchainInsper.Member memory _member = members[memberCount() + 1];
-
+            members[memberCount() + 1] = Member(_memberType, _memberAddress, true, 0, false, "", 0);
+            /*
             _member.memberType = _memberType;
             _member.memberAddress = _memberAddress;
             _member.active = true;
             _member.xp = 0;
             _member.changed = false;
-
+            */
             memberIds.push(memberCount() + 1);
         }
     }
 
     //sync with project
-    function addXp(uint256 _memberId, uint256 _amount) public {
+    function addXp(uint256 _memberId, uint8 _amount) public {
         if (isStaff()) {
             members[_memberId].xp += _amount;
         }
@@ -170,11 +169,9 @@ contract BlockchainInsper {
         }
     }
 
-    function deactivateMembers(uint256[] memory _ids) public{
+    function deactivateMembers(uint256 _ids) public{
         if (isStaff()){
-            for (uint256 i; i < _ids.length; i++) {
-                members[_ids[i]].active = false;
-            }
+            members[_ids].active = false;
         }
     }
 
