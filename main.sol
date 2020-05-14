@@ -14,6 +14,14 @@ contract BlockchainInsper {
         return msg.sender == president || msg.sender == techDirector;
     }
 
+    function changeStaff(address _president, address _techDirector) public {
+        if (isStaff()) {
+            president = _president;
+            techDirector = _techDirector;
+        }
+
+    }
+
 
 
     /* ====================
@@ -140,7 +148,7 @@ contract BlockchainInsper {
         return memberIds.length;
     }
 
-    function addMembers(uint8 _memberType, address _memberAddress) public {
+    function addMembers(uint8 _memberType, address _memberAddress) public returns(uint256) {
         if (msg.sender == president || msg.sender == techDirector) {
             members[memberCount() + 1] = Member(_memberType, _memberAddress, true, 0, false, "", 0);
             /*
@@ -151,6 +159,7 @@ contract BlockchainInsper {
             _member.changed = false;
             */
             memberIds.push(memberCount() + 1);
+            return memberCount() + 1;
         }
     }
 
@@ -160,6 +169,14 @@ contract BlockchainInsper {
             members[_memberId].xp += _amount;
         }
     }
+
+    //sync with project
+    function getXp(uint256 _memberId) public view returns(uint8) {
+        if (isStaff()) {
+             return members[_memberId].xp;
+        }
+    }
+
     // must be payed in ethereum
     // change to IPFS to lower gas cost & mainten
     function changeMemberAddressAndPGP(uint256 _memberId, address _address, string memory _PGPKey ) public {
