@@ -21,6 +21,7 @@ contract BlockchainInsper {
     =======================*/
     //burnout time dos dois pdoe ser correlacionado
     //pode ser feito uma aleatoriedade para voce pegar sua chave privada
+    /*
     uint512[] private privateKeys; //colocar no ipfs
     function addNewVoterPrivateKey(uint512[] _privateKeys) public {
         if (isStaff()) {
@@ -58,6 +59,36 @@ contract BlockchainInsper {
     function getKey(uint64 _randomId) public returns (uint512){
         return futureRelease[_randomId];
     }
+    */
+
+
+    mapping(address => bool) voted;
+    function addVoter(address _voter) public {
+        if (isStaff()){
+            voted[_voter] = true;
+        }
+    }
+
+    uint256 greater = 0;
+    uint256 greaterId = 0;
+
+    function vote(uint256 _votingId) public {
+        if (voted[msg.sender]) {
+            members[_votingId].staffPoints += 1;
+            if (members[_votingId].staffPoints > greater) {
+                greaterId = _votingId;
+                greater = members[_votingId].staffPoints;
+            }
+            voted[msg.sender] = false;
+        }
+    }
+
+    function votedStaff() public view returns(uint256) {
+        return greaterId;
+    }
+
+
+
 
 
 
@@ -133,7 +164,7 @@ contract BlockchainInsper {
     // must be payed in ethereum
     // change to IPFS to lower gas cost & mainten
     function changeMemberAddressAndPGP(uint256 _memberId, address _address, string memory _PGPKey ) public {
-        if () {
+        if (isStaff()) {
             members[_memberId].memberAddress = _address;
             members[_memberId].PGP = _PGPKey;
         }
