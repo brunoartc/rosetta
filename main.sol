@@ -68,31 +68,30 @@ contract BlockchainInsper {
         bool active;
         uint256 xp;
         string PGPfingerprint;
-        string moreInfo;
+        bytes moreInfo;
     }
 
     mapping(uint256 => Member) members;
     uint256[] public memberIds;
 
-    function memberCount() private view returns (uint256 count) {
+    function getUserXp(uint256 _memberId) public view returns (uint256 count) {
+        return members[_memberId].xp;
+    }
+
+    function memberCount() public view returns (uint256 count) {
         return memberIds.length;
     }
 
     function addMembers(address _memberAddress, string memory _PGPfingerprint,
-     string memory _IPFSfile) public returns (uint256){
+     string memory _IPFSfile) public {
         if (isStaff()) {
-            BlockchainInsper.Member memory _member = members[memberCount() + 1];
-
-            _member.memberAddress = _memberAddress;
-            _member.active = true;
-            _member.xp = 0;
-            _member.PGPfingerprint = _PGPfingerprint;
-            _member.moreInfo = _IPFSfile;
+            members[memberCount() + 1].memberAddress = _memberAddress;
+            members[memberCount() + 1].active = true;
+            members[memberCount() + 1].xp = 10;
+            members[memberCount() + 1].PGPfingerprint = _PGPfingerprint;
+            members[memberCount() + 1].moreInfo = bytes(_IPFSfile);
 
             memberIds.push(memberCount() + 1); //change to a number (less memory?)
-            return memberCount() + 1;
-        } else {
-            return 0;
         }
     }
 
@@ -119,6 +118,10 @@ contract BlockchainInsper {
                 members[_ids[i]].active = false;
             }
         }
+    }
+
+    function getMemberDescription(uint256 _memberId) public view returns(bytes memory) {
+        return members[_memberId].moreInfo;
     }
 
 }
