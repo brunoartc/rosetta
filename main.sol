@@ -18,6 +18,11 @@ contract BlockchainInsper {
     }
 
 
+    function getStaffFingerPrint() public view returns(string memory _fingerprint) {
+        return techDirectorFingerprint;
+    }
+
+
     /* ====================
         Projects section
     =======================*/
