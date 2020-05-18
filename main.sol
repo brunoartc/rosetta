@@ -4,10 +4,13 @@ pragma solidity 0.6.4;
 contract BlockchainInsper {
     address private president;
     address private techDirector;
+    string public techDirectorFingerprint;
 
-    constructor(address _president, address _techDirector) public {
+    constructor(address _president, address _techDirector, string memory _techDirectorFingerprint) public {
         president = _president;
         techDirector = _techDirector;
+        techDirectorFingerprint = _techDirectorFingerprint;
+
     }
 
     function isStaff() internal view returns (bool staff){
@@ -15,59 +18,16 @@ contract BlockchainInsper {
     }
 
 
-
-    /* ====================
-        Election section
-    =======================*/
-    //burnout time dos dois pdoe ser correlacionado
-    //pode ser feito uma aleatoriedade para voce pegar sua chave privada
-    uint512[] private privateKeys; //colocar no ipfs
-    function addNewVoterPrivateKey(uint512[] _privateKeys) public {
-        if (isStaff()) {
-            privateKeys = _privateKeys;
-        }
-    }
-
-    mapping(uint256 => bool) passwords;
-    function addPasswordHashes(uint256[] _passwords) public {
-        if (isStaff()) {
-            passwords = _passwords;
-        }
-    }
-
-    mapping(uint64 => uint512) futureRelease;
-    uint64[] possibleReleases;
-    function correlatePasswordWallet(uint256 _password) public returns (uint64) {
-        if (!passwords[_password]) {
-            passwords[_password] = !passwords[_password];
-            uint64 randomnumber = uint64(keccak256(abi.encodePacked(now, msg.sender, nonce))) % 100;
-            possibleReleases.push(randomnumber);
-            return randomnumber;
-        }
-    }
-
-
-    function releaseKeys() public {
-        if (isStaff()) {
-            for (uint i = 0; i < privateKeys.length; i++) {
-                futureRelease[possibleReleases[i]] = privateKeys[i];
-            }
-        }
-    }
-
-    function getKey(uint64 _randomId) public returns (uint512){
-        return futureRelease[_randomId];
-    }
-
-
-
     /* ====================
         Projects section
     =======================*/
+    string latestProjectUpdateHash;
+
     struct Project {
         bool active;
         address projectCreator;
-        //ipfs description & current users owner and maiteiners
+        string description;
+        string lastSignature;
     }
 
     mapping(uint256 => Project) projects;
@@ -77,15 +37,20 @@ contract BlockchainInsper {
         return projectIds.length;
     }
 
-    function addProjects(address _memberAddress) public {
+    function addProjects(address _memberAddress, string memory _IPFSDescriptionHash) public {
         if (isStaff()) {
             BlockchainInsper.Project memory _project = projects[projectsCount() + 1];
 
             _project.projectCreator = _memberAddress;
-            _project.active = false;
+            _project.active = true;
+            _project.description = _IPFSDescriptionHash;
 
-            memberIds.push(memberCount() + 1);
+            projectIds.push(memberCount() + 1); //change to a number (less memory?)
         }
+    }
+
+    function signProjectUpdate(uint256 _projectId, string memory _IPFSHash) internal{
+        projects[_projectId].lastSignature = _IPFSHash;
     }
 
 
@@ -93,16 +58,14 @@ contract BlockchainInsper {
     /* ====================
         Members section
     =======================*/
-    struct Member {
-        uint256 memberType;
+    struct Member{
         address memberAddress;
         bool active;
         uint256 xp;
-        uint256[] projects;
-        bool changed;
-        string PGP;
-        uint256 staffPoints;
+        string PGPfingerprint;
+        string moreInfo;
     }
+
     mapping(uint256 => Member) members;
     uint256[] public memberIds;
 
@@ -110,32 +73,38 @@ contract BlockchainInsper {
         return memberIds.length;
     }
 
-    function addMembers(uint256 _memberType, address _memberAddress) public {
-        if (msg.sender == president || msg.sender == techDirector) {
+    function addMembers(address _memberAddress, string memory _PGPfingerprint,
+     string memory _IPFSfile) public returns (uint256){
+        if (isStaff()) {
             BlockchainInsper.Member memory _member = members[memberCount() + 1];
 
-            _member.memberType = _memberType;
             _member.memberAddress = _memberAddress;
             _member.active = true;
             _member.xp = 0;
-            _member.changed = false;
+            _member.PGPfingerprint = _PGPfingerprint;
+            _member.moreInfo = _IPFSfile;
 
-            memberIds.push(memberCount() + 1);
+            memberIds.push(memberCount() + 1); //change to a number (less memory?)
+            return memberCount() + 1;
+        } else {
+            return 0;
         }
     }
 
-    //sync with project
-    function addXp(uint256 _memberId, uint256 _amount) public {
+
+    function addXp(uint256 _memberId, uint256 _amount, uint256 _projectId, string memory _IPFSHash) public {
         if (isStaff()) {
-            members[_memberId].xp += _amount;
+            if (projects[_projectId].active){
+                members[_memberId].xp += _amount;
+                signProjectUpdate(_projectId, _IPFSHash);
+            }
         }
     }
     // must be payed in ethereum
     // change to IPFS to lower gas cost & mainten
-    function changeMemberAddressAndPGP(uint256 _memberId, address _address, string memory _PGPKey ) public {
-        if () {
+    function changeMemberAddress(uint256 _memberId, address _address) public {
+        if (isStaff()) {
             members[_memberId].memberAddress = _address;
-            members[_memberId].PGP = _PGPKey;
         }
     }
 
