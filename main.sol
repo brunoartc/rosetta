@@ -1,195 +1,166 @@
-pragma solidity 0.6.4;
+pragma solidity 0.6.6;
 
 
 contract BlockchainInsper {
     address private president;
     address private techDirector;
+    string public techDirectorFingerprint;
 
-    constructor(address _president, address _techDirector) public {
+    constructor(address _president, address _techDirector, string memory _techDirectorFingerprint) public {
         president = _president;
         techDirector = _techDirector;
+        techDirectorFingerprint = _techDirectorFingerprint;
+
     }
 
     function isStaff() internal view returns (bool staff){
         return msg.sender == president || msg.sender == techDirector;
     }
 
-    function changeStaff(address _president, address _techDirector) public {
-        if (isStaff()) {
-            president = _president;
-            techDirector = _techDirector;
-        }
 
+    function getStaffFingerPrint() public view returns(string memory _fingerprint) {
+        return techDirectorFingerprint;
     }
-
-
-
-    /* ====================
-        Election section
-    =======================*/
-    //burnout time dos dois pdoe ser correlacionado
-    //pode ser feito uma aleatoriedade para voce pegar sua chave privada
-    /*
-    uint512[] private privateKeys; //colocar no ipfs
-    function addNewVoterPrivateKey(uint512[] _privateKeys) public {
-        if (isStaff()) {
-            privateKeys = _privateKeys;
-        }
-    }
-
-    mapping(uint256 => bool) passwords;
-    function addPasswordHashes(uint256[] _passwords) public {
-        if (isStaff()) {
-            passwords = _passwords;
-        }
-    }
-
-    mapping(uint64 => uint512) futureRelease;
-    uint64[] possibleReleases;
-    function correlatePasswordWallet(uint256 _password) public returns (uint64) {
-        if (!passwords[_password]) {
-            passwords[_password] = !passwords[_password];
-            uint64 randomnumber = uint64(keccak256(abi.encodePacked(now, msg.sender, nonce))) % 100;
-            possibleReleases.push(randomnumber);
-            return randomnumber;
-        }
-    }
-
-
-    function releaseKeys() public {
-        if (isStaff()) {
-            for (uint i = 0; i < privateKeys.length; i++) {
-                futureRelease[possibleReleases[i]] = privateKeys[i];
-            }
-        }
-    }
-
-    function getKey(uint64 _randomId) public returns (uint512){
-        return futureRelease[_randomId];
-    }
-    */
-
-
-    mapping(address => bool) voted;
-    function addVoter(address _voter) public {
-        if (isStaff()){
-            voted[_voter] = true;
-        }
-    }
-
-    uint256 greater = 0;
-    uint256 greaterId = 0;
-
-    function vote(uint256 _votingId) public {
-        if (voted[msg.sender]) {
-            members[_votingId].staffPoints += 1;
-            if (members[_votingId].staffPoints > greater) {
-                greaterId = _votingId;
-                greater = members[_votingId].staffPoints;
-            }
-            voted[msg.sender] = false;
-        }
-    }
-
-    function votedStaff() public view returns(uint256) {
-        return greaterId;
-    }
-
-
-
-
 
 
     /* ====================
         Projects section
     =======================*/
+    string latestProjectUpdateHash;
+
     struct Project {
         bool active;
         address projectCreator;
-        //ipfs description & current users owner and maiteiners
+        bytes description;
+        bytes lastSignature;
     }
 
     mapping(uint256 => Project) projects;
     uint256[] public projectIds;
 
-    function projectsCount() private view returns (uint256 count) {
+    function projectsCount() public view returns (uint256 count) {
         return projectIds.length;
     }
 
-    function addProjects(address _memberAddress) public {
+    function addProjects(address _memberAddress, string memory _IPFSDescriptionHash) public {
         if (isStaff()) {
             BlockchainInsper.Project memory _project = projects[projectsCount() + 1];
 
             _project.projectCreator = _memberAddress;
-            _project.active = false;
-
-            memberIds.push(memberCount() + 1);
+            _project.active = true;
+            _project.description = bytes(_IPFSDescriptionHash);
+            _project.lastSignature = bytes(_IPFSDescriptionHash);
+            projectIds.push(memberCount() + 1); //change to a number (less memory?)
         }
     }
+    
+    
 
-
+    function signProjectUpdate(uint256 _projectId, bytes memory _IPFSHash) internal{
+        projects[_projectId].lastSignature = _IPFSHash;
+    }
+    
+    
+    function getProjectLastUpdate(uint256 _projectId) public view returns(bytes memory) {
+        return projects[_projectId].lastSignature;
+    }
+    
+    function getProjectDescription(uint256 _projectId) public view returns(bytes memory) {
+        return projects[_projectId].description;
+    }
+    
 
     /* ====================
         Members section
     =======================*/
-    struct Member {
-        uint8 memberType;
+    struct Member{
         address memberAddress;
         bool active;
-        uint8 xp;
-        bool changed;
-        string PGP;
-        uint8 staffPoints;
+        uint256 xp;
+        bytes PGPfingerprint;
+        bytes moreInfo;
     }
+
     mapping(uint256 => Member) members;
     uint256[] public memberIds;
 
-    function memberCount() private view returns (uint256 count) {
+    
+
+    function memberCount() public view returns (uint256 count) {
         return memberIds.length;
     }
 
-    function addMembers(uint8 _memberType, address _memberAddress) public returns(uint256) {
-        if (msg.sender == president || msg.sender == techDirector) {
-            members[memberCount() + 1] = Member(_memberType, _memberAddress, true, 0, false, "", 0);
-            /*
-            _member.memberType = _memberType;
-            _member.memberAddress = _memberAddress;
-            _member.active = true;
-            _member.xp = 0;
-            _member.changed = false;
-            */
-            memberIds.push(memberCount() + 1);
-            return memberCount() + 1;
-        }
-    }
-
-    //sync with project
-    function addXp(uint256 _memberId, uint8 _amount) public {
+    function addMembers(address _memberAddress, string memory _PGPfingerprint,
+     string memory _IPFSfile) public {
         if (isStaff()) {
-            members[_memberId].xp += _amount;
+            members[memberCount() + 1].memberAddress = _memberAddress;
+            members[memberCount() + 1].active = true;
+            members[memberCount() + 1].xp = 10;
+            members[memberCount() + 1].PGPfingerprint = bytes(_PGPfingerprint);
+            members[memberCount() + 1].moreInfo = bytes(_IPFSfile);
+
+            memberIds.push(memberCount() + 1); //change to a number (less memory?)
         }
+        
     }
 
-    //sync with project
-    function getXp(uint256 _memberId) public view returns(uint8) {
+
+    function addXp(uint256 _memberId, uint256 _amount, uint256 _projectId, string memory _IPFSHash) public {
         if (isStaff()) {
-             return members[_memberId].xp;
+            if (projects[_projectId].active){
+                members[_memberId].xp += _amount;
+                signProjectUpdate(_projectId, bytes(_IPFSHash));
+            }
         }
     }
-
     // must be payed in ethereum
     // change to IPFS to lower gas cost & mainten
-    function changeMemberAddressAndPGP(uint256 _memberId, address _address, string memory _PGPKey ) public {
+    function changeMemberAddress(uint256 _memberId, address _address) public {
         if (isStaff()) {
             members[_memberId].memberAddress = _address;
-            members[_memberId].PGP = _PGPKey;
+        }
+    }
+    
+    
+    function changePresident(address _address) public {
+        if (isStaff()) {
+            president = _address;
+        }
+    }
+    
+    
+    function changeTechDirector(address _address, string memory _techDirectorFingerprint) public {
+        if (isStaff()) {
+            techDirector = _address;
+            techDirectorFingerprint = _techDirectorFingerprint;
         }
     }
 
-    function deactivateMembers(uint256 _ids) public{
+    function deactivateMembers(uint256[] memory _ids) public{
         if (isStaff()){
-            members[_ids].active = false;
+            for (uint256 i; i < _ids.length; i++) {
+                members[_ids[i]].active = false;
+            }
         }
     }
+    
+    
+    function getUserXp(uint256 _memberId) public view returns (uint256 count) {
+        return members[_memberId].xp;
+    }
+
+    function getMemberDescription(uint256 _memberId) public view returns(bytes memory) {
+        return members[_memberId].moreInfo;
+    }
+    
+    function getMemberPGPfingerprint(uint256 _memberId) public view returns(bytes memory) {
+        return members[_memberId].PGPfingerprint;
+    }
+    
+    function getMemberAddress(uint256 _memberId) public view returns(address) {
+        return members[_memberId].memberAddress;
+    }
+
+
 
 }
