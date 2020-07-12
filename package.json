@@ -1,0 +1,22 @@
+{
+  "name": "blockchain-hyeraqui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "ipfs.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brunoartc/blockchain-hyeraqui.git"
+  },
+  "author": "brunoartc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/brunoartc/blockchain-hyeraqui/issues"
+  },
+  "homepage": "https://github.com/brunoartc/blockchain-hyeraqui#readme",
+  "dependencies": {
+    "ipfs-api": "^26.1.2"
+  }
+}

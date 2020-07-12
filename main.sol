@@ -1,4 +1,4 @@
-pragma solidity 0.6.6;
+pragma solidity 0.6.9;
 
 
 contract BlockchainInsper {
@@ -53,22 +53,19 @@ contract BlockchainInsper {
             projectIds.push(memberCount() + 1); //change to a number (less memory?)
         }
     }
-    
-    
 
     function signProjectUpdate(uint256 _projectId, bytes memory _IPFSHash) internal{
         projects[_projectId].lastSignature = _IPFSHash;
     }
-    
-    
+
     function getProjectLastUpdate(uint256 _projectId) public view returns(bytes memory) {
         return projects[_projectId].lastSignature;
     }
-    
+
     function getProjectDescription(uint256 _projectId) public view returns(bytes memory) {
         return projects[_projectId].description;
     }
-    
+
 
     /* ====================
         Members section
@@ -83,8 +80,6 @@ contract BlockchainInsper {
 
     mapping(uint256 => Member) members;
     uint256[] public memberIds;
-
-    
 
     function memberCount() public view returns (uint256 count) {
         return memberIds.length;
@@ -101,7 +96,6 @@ contract BlockchainInsper {
 
             memberIds.push(memberCount() + 1); //change to a number (less memory?)
         }
-        
     }
 
 
@@ -120,15 +114,13 @@ contract BlockchainInsper {
             members[_memberId].memberAddress = _address;
         }
     }
-    
-    
+
     function changePresident(address _address) public {
         if (isStaff()) {
             president = _address;
         }
     }
-    
-    
+
     function changeTechDirector(address _address, string memory _techDirectorFingerprint) public {
         if (isStaff()) {
             techDirector = _address;
@@ -143,8 +135,7 @@ contract BlockchainInsper {
             }
         }
     }
-    
-    
+
     function getUserXp(uint256 _memberId) public view returns (uint256 count) {
         return members[_memberId].xp;
     }
@@ -152,15 +143,12 @@ contract BlockchainInsper {
     function getMemberDescription(uint256 _memberId) public view returns(bytes memory) {
         return members[_memberId].moreInfo;
     }
-    
+
     function getMemberPGPfingerprint(uint256 _memberId) public view returns(bytes memory) {
         return members[_memberId].PGPfingerprint;
     }
-    
+
     function getMemberAddress(uint256 _memberId) public view returns(address) {
         return members[_memberId].memberAddress;
     }
-
-
-
 }
