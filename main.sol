@@ -13,8 +13,9 @@ contract BlockchainInsper {
 
     }
 
-    function isStaff() internal view returns (bool staff){
-        return msg.sender == president || msg.sender == techDirector;
+    modifier isStaff() {
+        require msg.sender == president || msg.sender == techDirector;
+        _;
     }
 
 
@@ -42,16 +43,14 @@ contract BlockchainInsper {
         return projectIds.length;
     }
 
-    function addProjects(address _memberAddress, string memory _IPFSDescriptionHash) public {
-        if (isStaff()) {
-            BlockchainInsper.Project memory _project = projects[projectsCount() + 1];
+    function addProjects(address _memberAddress, string memory _IPFSDescriptionHash) public isStaff {
+        BlockchainInsper.Project memory _project = projects[projectsCount() + 1];
 
-            _project.projectCreator = _memberAddress;
-            _project.active = true;
-            _project.description = bytes(_IPFSDescriptionHash);
-            _project.lastSignature = bytes(_IPFSDescriptionHash);
-            projectIds.push(memberCount() + 1); //change to a number (less memory?)
-        }
+        _project.projectCreator = _memberAddress;
+        _project.active = true;
+        _project.description = bytes(_IPFSDescriptionHash);
+        _project.lastSignature = bytes(_IPFSDescriptionHash);
+        projectIds.push(memberCount() + 1); //change to a number (less memory?)
     }
 
     function signProjectUpdate(uint256 _projectId, bytes memory _IPFSHash) internal{
@@ -86,33 +85,27 @@ contract BlockchainInsper {
     }
 
     function addMembers(address _memberAddress, string memory _PGPfingerprint,
-     string memory _IPFSfile) public {
-        if (isStaff()) {
-            members[memberCount() + 1].memberAddress = _memberAddress;
-            members[memberCount() + 1].active = true;
-            members[memberCount() + 1].xp = 10;
-            members[memberCount() + 1].PGPfingerprint = bytes(_PGPfingerprint);
-            members[memberCount() + 1].moreInfo = bytes(_IPFSfile);
+     string memory _IPFSfile) public isStaff {
+        members[memberCount() + 1].memberAddress = _memberAddress;
+        members[memberCount() + 1].active = true;
+        members[memberCount() + 1].xp = 10;
+        members[memberCount() + 1].PGPfingerprint = bytes(_PGPfingerprint);
+        members[memberCount() + 1].moreInfo = bytes(_IPFSfile);
 
-            memberIds.push(memberCount() + 1); //change to a number (less memory?)
-        }
+        memberIds.push(memberCount() + 1); //change to a number (less memory?)
     }
 
 
-    function addXp(uint256 _memberId, uint256 _amount, uint256 _projectId, string memory _IPFSHash) public {
-        if (isStaff()) {
-            if (projects[_projectId].active){
-                members[_memberId].xp += _amount;
-                signProjectUpdate(_projectId, bytes(_IPFSHash));
-            }
+    function addXp(uint256 _memberId, uint256 _amount, uint256 _projectId, string memory _IPFSHash) public isStaff {
+        if (projects[_projectId].active){
+            members[_memberId].xp += _amount;
+            signProjectUpdate(_projectId, bytes(_IPFSHash));
         }
     }
     // must be payed in ethereum
     // change to IPFS to lower gas cost & mainten
-    function changeMemberAddress(uint256 _memberId, address _address) public {
-        if (isStaff()) {
-            members[_memberId].memberAddress = _address;
-        }
+    function changeMemberAddress(uint256 _memberId, address _address) public isStaff {
+        members[_memberId].memberAddress = _address;
     }
 
     function changePresident(address _address) public {
@@ -121,18 +114,14 @@ contract BlockchainInsper {
         }
     }
 
-    function changeTechDirector(address _address, string memory _techDirectorFingerprint) public {
-        if (isStaff()) {
-            techDirector = _address;
-            techDirectorFingerprint = _techDirectorFingerprint;
-        }
+    function changeTechDirector(address _address, string memory _techDirectorFingerprint) public isStaff {
+        techDirector = _address;
+        techDirectorFingerprint = _techDirectorFingerprint;
     }
 
-    function deactivateMembers(uint256[] memory _ids) public{
-        if (isStaff()){
-            for (uint256 i; i < _ids.length; i++) {
-                members[_ids[i]].active = false;
-            }
+    function deactivateMembers(uint256[] memory _ids) public isStaff {
+        for (uint256 i; i < _ids.length; i++) {
+            members[_ids[i]].active = false;
         }
     }
 
